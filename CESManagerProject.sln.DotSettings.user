@@ -1,0 +1,17 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a6812b45_002Dbced_002D46b5_002Daa43_002D8a46190dbb8e/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from SessionControllerTests.cs" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;Or&gt;&#xD;
+    &lt;ProjectFile&gt;2F85978C-4407-4F38-AF28-8872F3D8B361/d:IntegrationTests/d:ControllerTests/f:SessionControllerTests.cs&lt;/ProjectFile&gt;&#xD;
+    &lt;TestAncestor&gt;&#xD;
+      &lt;TestId&gt;NUnit3x::2F85978C-4407-4F38-AF28-8872F3D8B361::.NETCoreApp,Version=v3.1::Tests.UnitTests.Controllers.SessionControllerUnitTests.Get_HappyPath_ShouldReturnAllSessions&lt;/TestId&gt;&#xD;
+      &lt;TestId&gt;NUnit3x::2F85978C-4407-4F38-AF28-8872F3D8B361::.NETCoreApp,Version=v3.1::Tests.UnitTests.Controllers.SessionControllerUnitTests.GetSingle_HappyPath_ShouldReturnOK&lt;/TestId&gt;&#xD;
+    &lt;/TestAncestor&gt;&#xD;
+  &lt;/Or&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=b08fb0a6_002Dadbd_002D4c41_002D8e45_002D834a5fe1c048/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="RegisterUserShouldReturn200Ok" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2F85978C-4407-4F38-AF28-8872F3D8B361::.NETCoreApp,Version=v3.1::Tests.IntegrationTests.ControllerTests.SessionControllerTests.RegisterUserShouldReturn200Ok&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2F85978C-4407-4F38-AF28-8872F3D8B361::.NETCoreApp,Version=v3.1::Tests.IntegrationTests.ControllerTests.SessionControllerTests.LoginUserShouldReturn200Ok&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::2F85978C-4407-4F38-AF28-8872F3D8B361::.NETCoreApp,Version=v3.1::Tests.IntegrationTests.ControllerTests.SessionControllerTests.RecordNewSessionShouldReturn200Ok&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
