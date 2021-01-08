@@ -17,6 +17,8 @@ using NUnit.Framework;
 namespace Tests.IntegrationTests.ControllerTests
 {
     [TestFixture]
+    [Category("IntegrationTests")]
+
     public class SessionControllerTests
     {
         private string _bearerToken;

@@ -15,6 +15,7 @@ using NUnit.Framework;
 namespace Tests.UnitTests.Controllers
 {
     [TestFixture]
+    [Category("UnitTests")]
     public class SessionControllerUnitTests
     {
         [Test]
