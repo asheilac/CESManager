@@ -11,7 +11,6 @@ namespace CESManager.Services.SessionService
          Task<ServiceResponse<GetSessionDto>> GetSessionById (int id);
          Task<ServiceResponse<List<GetSessionDto>>> AddSession (AddSessionDto newSession);
          Task<ServiceResponse<List<GetSessionDto>>> DeleteSession (int id);
-
          Task<ServiceResponse<GetSessionDto>> UpdateSession (UpdateSessionDto updatedSession);
     }
 }
