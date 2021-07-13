@@ -1,3 +1,5 @@
+using System.Net;
+
 namespace CESManager.Models
 {
     public class ServiceResponse<T>

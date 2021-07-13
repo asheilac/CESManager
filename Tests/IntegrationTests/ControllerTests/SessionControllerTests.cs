@@ -246,7 +246,7 @@ namespace Tests.IntegrationTests.ControllerTests
         }
 
         [Test]
-        public async Task UpdateSessionByInvalidIdReturnsNotFound()
+        public async Task UpdateSessionByInvalidIdReturnNotFound()
         {
             // Arrange
             var json = new
@@ -259,9 +259,11 @@ namespace Tests.IntegrationTests.ControllerTests
             // Act
             var content = GetStringContent(json);
             var response = await _httpClient.PutAsync(_urlSession, content);
+            var session = await GetObjectFromResponse<ServiceResponse<GetSessionDto>>(response);
 
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);            
+            session.Message.Should().Be("Session not found.");
         }
 
         [Test]

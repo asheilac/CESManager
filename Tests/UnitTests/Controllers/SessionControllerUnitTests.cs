@@ -255,7 +255,6 @@ namespace Tests.UnitTests.Controllers
 
             //Assert
             Assert.AreEqual(typeof(BadRequestObjectResult), result.GetType());
-            Assert.AreEqual("EndDateTime must be later than StartDateTime.", actualResult);
         }
 
         [Test]
