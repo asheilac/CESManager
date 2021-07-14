@@ -66,11 +66,11 @@ namespace CESManager.Controllers
         public async Task<IActionResult> UpdateSession (UpdateSessionDto updatedSession)
         {
             ServiceResponse<GetSessionDto> response  = await _sessionService.UpdateSession(updatedSession);
-            if (response.Data == null)
+            if (response.Message == "Session not found.")
             {
                 return NotFound(response);
             }
-            if (response.Data.Duration <= 0)
+            if (response.Message == "EndDateTime cannot be earlier than StartDateTime.")
             {
                 return BadRequest(response);
             }
