@@ -159,10 +159,10 @@ namespace CESManager.Services.SessionService
                     serviceResponse.Message = "Session not found.";
                 }
             }
-            catch (Exception ex)
+            catch 
             {
                 serviceResponse.Success = false;
-                serviceResponse.Message = ex.Message;
+                serviceResponse.StatusCode = HttpStatusCode.InternalServerError;
             }
             return serviceResponse;
         }
