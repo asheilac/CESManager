@@ -217,7 +217,8 @@ namespace Tests.UnitTests.Controllers
             A.CallTo(() => mockSessionService.UpdateSession(updatedSession)).Returns(
                 new ServiceResponse<GetSessionDto>
                 {
-                    Data = null
+                    Data = null,
+                    Message = "Session not found."
                 });
             var controller = new SessionController(mockSessionService);
 
@@ -232,19 +233,12 @@ namespace Tests.UnitTests.Controllers
         public async Task UpdateSession_HappyPath_ShouldReturnBadRequest()
         {
             //Arrange
-            var endDate = DateTime.Now.AddDays(-1);
-            var startDate = DateTime.Now;
             var updatedSession = new UpdateSessionDto();
             var mockSessionService = A.Fake<ISessionService>();
             A.CallTo(() => mockSessionService.UpdateSession(updatedSession)).Returns(
                 new ServiceResponse<GetSessionDto>
                 {
-                    Data = new GetSessionDto
-                    {
-                        Id = 1,
-                        StartDateTime = startDate,
-                        EndDateTime = endDate
-                    }
+                    Message = "EndDateTime cannot be earlier than StartDateTime."
                 });
             var controller = new SessionController(mockSessionService);
 
@@ -255,7 +249,6 @@ namespace Tests.UnitTests.Controllers
 
             //Assert
             Assert.AreEqual(typeof(BadRequestObjectResult), result.GetType());
-            Assert.AreEqual("EndDateTime must be later than StartDateTime.", actualResult);
         }
 
         [Test]

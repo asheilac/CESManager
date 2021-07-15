@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -25,7 +26,8 @@ namespace CESManager.Services.SessionService
             _mapper = mapper;
         }
 
-        private int GetUserId() => int.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        private int GetUserId() =>
+            int.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
 
         public async Task<ServiceResponse<List<GetSessionDto>>> AddSession(AddSessionDto newSession)
         {
@@ -57,6 +59,7 @@ namespace CESManager.Services.SessionService
                 serviceResponse.Success = false;
                 serviceResponse.Message = ex.Message;
             }
+
             return serviceResponse;
         }
 
@@ -74,7 +77,7 @@ namespace CESManager.Services.SessionService
                     serviceResponse.Data = (_context.Sessions.Where(s => s.User.Id == GetUserId())
                         .Select(s => _mapper.Map<GetSessionDto>(s))).ToList();
                 }
-                else 
+                else
                 {
                     serviceResponse.Success = false;
                     serviceResponse.Message = "Session not found.";
@@ -85,6 +88,7 @@ namespace CESManager.Services.SessionService
                 serviceResponse.Success = false;
                 serviceResponse.Message = ex.Message;
             }
+
             return serviceResponse;
         }
 
@@ -119,6 +123,7 @@ namespace CESManager.Services.SessionService
                 serviceResponse.Success = false;
                 serviceResponse.Message = ex.Message;
             }
+
             return serviceResponse;
         }
 
@@ -127,11 +132,12 @@ namespace CESManager.Services.SessionService
             ServiceResponse<GetSessionDto> serviceResponse = new ServiceResponse<GetSessionDto>();
             try
             {
-                Session session = await _context.Sessions.Include(s => s.User).FirstOrDefaultAsync(s => s.Id == updatedSession.Id);
-                if (session.User.Id == GetUserId())
+                Session session = await _context.Sessions.Include(s => s.User)
+                    .FirstOrDefaultAsync(s => s.Id == updatedSession.Id);
+                if (session != null && session.User.Id == GetUserId())
                 {
-                    int result = DateTime.Compare(updatedSession.StartDateTime, updatedSession.EndDateTime);
-                    if (result <= 0)
+                    double result = updatedSession.Duration;
+                    if (result > 0)
                     {
                         session.StartDateTime = updatedSession.StartDateTime;
                         session.EndDateTime = updatedSession.EndDateTime;
@@ -141,10 +147,10 @@ namespace CESManager.Services.SessionService
 
                         serviceResponse.Data = _mapper.Map<GetSessionDto>(session);
                     }
-                    else
+                    else if (result <= 0)
                     {
                         serviceResponse.Success = false;
-                        serviceResponse.Message = "EndDateTime must be later than StartDateTime.";
+                        serviceResponse.Message = "EndDateTime cannot be earlier than StartDateTime.";
                     }
                 }
                 else
