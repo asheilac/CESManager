@@ -36,8 +36,8 @@ namespace CESManager.Services.SessionService
             {
                 Session session = _mapper.Map<Session>(newSession);
                 session.User = await _context.Users.FirstOrDefaultAsync(u => u.Id == GetUserId());
-                int result = DateTime.Compare(newSession.StartDateTime, newSession.EndDateTime);
-                if (result < 0)
+                double result = newSession.Duration;
+                if (result > 0)
                 {
                     session.StartDateTime = newSession.StartDateTime;
                     session.EndDateTime = newSession.EndDateTime;
@@ -50,16 +50,13 @@ namespace CESManager.Services.SessionService
                 }
                 else
                 {
-                    serviceResponse.Success = false;
-                    serviceResponse.Message = "EndDateTime cannot be earlier than StartDateTime.";
+                    serviceResponse.StatusCode = CESManagerStatusCode.NegativeDuration;
                 }
             }
-            catch 
+            catch
             {
-                serviceResponse.Success = false;
-                serviceResponse.StatusCode = HttpStatusCode.InternalServerError;
+                serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
-
             return serviceResponse;
         }
 
@@ -79,24 +76,35 @@ namespace CESManager.Services.SessionService
                 }
                 else
                 {
-                    serviceResponse.Success = false;
-                    serviceResponse.Message = "Session not found.";
+                    serviceResponse.StatusCode = CESManagerStatusCode.SessionNotFound;
                 }
             }
             catch 
             {
-                serviceResponse.Success = false;
-                serviceResponse.StatusCode = HttpStatusCode.InternalServerError;
+                serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
-
             return serviceResponse;
         }
 
         public async Task<ServiceResponse<List<GetSessionDto>>> GetAllSessions()
         {
             ServiceResponse<List<GetSessionDto>> serviceResponse = new ServiceResponse<List<GetSessionDto>>();
-            List<Session> dbSessions = await _context.Sessions.Where(c => c.User.Id == GetUserId()).ToListAsync();
-            serviceResponse.Data = (dbSessions.Select(s => _mapper.Map<GetSessionDto>(s))).ToList();
+            try
+            {
+                List<Session> dbSessions = await _context.Sessions.Where(c => c.User.Id == GetUserId()).ToListAsync();
+                if (dbSessions != null)
+                {
+                    serviceResponse.Data = (dbSessions.Select(s => _mapper.Map<GetSessionDto>(s))).ToList();
+                }
+                else
+                {
+                    serviceResponse.StatusCode = CESManagerStatusCode.SessionNotFound;
+                }
+            }
+            catch 
+            {
+                serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
+            }
             return serviceResponse;
         }
 
@@ -114,16 +122,13 @@ namespace CESManager.Services.SessionService
                 }
                 else
                 {
-                    serviceResponse.Success = false;
-                    serviceResponse.Message = "Session not found.";
+                    serviceResponse.StatusCode = CESManagerStatusCode.SessionNotFound;
                 }
             }
             catch 
             {
-                serviceResponse.Success = false;
-                serviceResponse.StatusCode = HttpStatusCode.InternalServerError;
+                serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
-
             return serviceResponse;
         }
 
@@ -147,22 +152,19 @@ namespace CESManager.Services.SessionService
 
                         serviceResponse.Data = _mapper.Map<GetSessionDto>(session);
                     }
-                    else if (result <= 0)
+                    else 
                     {
-                        serviceResponse.Success = false;
-                        serviceResponse.Message = "EndDateTime cannot be earlier than StartDateTime.";
+                        serviceResponse.StatusCode = CESManagerStatusCode.NegativeDuration;
                     }
                 }
                 else
                 {
-                    serviceResponse.Success = false;
-                    serviceResponse.Message = "Session not found.";
+                    serviceResponse.StatusCode = CESManagerStatusCode.SessionNotFound;
                 }
             }
             catch 
             {
-                serviceResponse.Success = false;
-                serviceResponse.StatusCode = HttpStatusCode.InternalServerError;
+                serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
             return serviceResponse;
         }

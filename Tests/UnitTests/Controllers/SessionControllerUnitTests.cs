@@ -19,7 +19,7 @@ namespace Tests.UnitTests.Controllers
     public class SessionControllerUnitTests
     {
         [Test]
-        public async Task Get_HappyPath_ShouldReturnAllSessions()
+        public async Task GetAll_HappyPath_ShouldReturnAllSessions()
         {
             // Arrange
             var endDate = DateTime.Now;
@@ -54,7 +54,7 @@ namespace Tests.UnitTests.Controllers
         }
 
         [Test]
-        public async Task Get_SadPath_ShouldReturnBadRequest()
+        public async Task GetAll_SadPath_ShouldReturnNotFound()
         {
             var mockSessionService = A.Fake<ISessionService>();
             A.CallTo(() => mockSessionService.GetAllSessions()).Returns(
@@ -68,7 +68,7 @@ namespace Tests.UnitTests.Controllers
             var result = await controller.Get();
 
             //Assert
-            Assert.AreEqual(typeof(BadRequestObjectResult), result.GetType());
+            Assert.AreEqual(typeof(NotFoundObjectResult), result.GetType());
         }
 
         [Test]
@@ -103,7 +103,7 @@ namespace Tests.UnitTests.Controllers
         }
 
         [Test]
-        public async Task GetSingle_HappyPath_ShouldReturnNotFound()
+        public async Task GetSingle_SadPath_ShouldReturnNotFound()
         {
             //Arrange
             var mockSessionService = A.Fake<ISessionService>();
@@ -157,7 +157,7 @@ namespace Tests.UnitTests.Controllers
         }
 
         [Test]
-        public async Task AddSession_HappyPath_ShouldReturnBadRequest()
+        public async Task AddSession_SadPath_ShouldReturnBadRequest()
         {
             //Arrange
             var newSession = new AddSessionDto();
@@ -209,7 +209,7 @@ namespace Tests.UnitTests.Controllers
         }
 
         [Test]
-        public async Task UpdateSession_HappyPath_ShouldReturnNotFound()
+        public async Task UpdateSession_SadPath_ShouldReturnNotFound()
         {
             //Arrange
             var updatedSession = new UpdateSessionDto();
@@ -218,7 +218,7 @@ namespace Tests.UnitTests.Controllers
                 new ServiceResponse<GetSessionDto>
                 {
                     Data = null,
-                    Message = "Session not found."
+                    StatusCode = CESManagerStatusCode.SessionNotFound
                 });
             var controller = new SessionController(mockSessionService);
 
@@ -230,7 +230,7 @@ namespace Tests.UnitTests.Controllers
         }
 
         [Test]
-        public async Task UpdateSession_HappyPath_ShouldReturnBadRequest()
+        public async Task UpdateSession_SadPath_ShouldReturnBadRequest()
         {
             //Arrange
             var updatedSession = new UpdateSessionDto();
@@ -238,19 +238,37 @@ namespace Tests.UnitTests.Controllers
             A.CallTo(() => mockSessionService.UpdateSession(updatedSession)).Returns(
                 new ServiceResponse<GetSessionDto>
                 {
-                    Message = "EndDateTime cannot be earlier than StartDateTime."
+                    StatusCode = CESManagerStatusCode.NegativeDuration
                 });
             var controller = new SessionController(mockSessionService);
 
             //Act
             var result = await controller.UpdateSession(updatedSession);
-            var badResult = result as BadRequestObjectResult;
-            var actualResult = badResult.Value as string;
 
             //Assert
             Assert.AreEqual(typeof(BadRequestObjectResult), result.GetType());
         }
 
+        [Test]
+        public async Task UpdateSession_SadPath_ShouldReturnInternalServerError()
+        {
+            //Arrange
+            var updatedSession = new UpdateSessionDto();
+            var mockSessionService = A.Fake<ISessionService>();
+            A.CallTo(() => mockSessionService.UpdateSession(updatedSession)).Returns(
+                new ServiceResponse<GetSessionDto>
+                {
+                    StatusCode = CESManagerStatusCode.InternalServerError
+                });
+            var controller = new SessionController(mockSessionService);
+
+            //Act
+            var result = await controller.UpdateSession(updatedSession);
+            var badResult = result as StatusCodeResult;
+
+            //Assert
+            Assert.AreEqual(StatusCodes.Status500InternalServerError, badResult.StatusCode);
+        }
         [Test]
         public async Task Delete_HappyPath_ShouldReturnOk()
         {
@@ -286,7 +304,7 @@ namespace Tests.UnitTests.Controllers
         }
 
         [Test]
-        public async Task Delete_HappyPath_ShouldReturnNotFound()
+        public async Task Delete_SadPath_ShouldReturnNotFound()
         {
             //Arrange
             var mockSessionService = A.Fake<ISessionService>();

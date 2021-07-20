@@ -26,12 +26,10 @@ namespace CESManager.Data
             User user = await _context.Users.FirstOrDefaultAsync(x => x.Username.ToLower().Equals(username.ToLower()));
             if (user == null)
             {
-                response.Success = false;
                 response.Message = "User not found.";
             }
             else if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
             {
-                response.Success = false;
                 response.Message = "Wrong password";
             }
             else
@@ -47,7 +45,6 @@ namespace CESManager.Data
             ServiceResponse<int> response = new ServiceResponse<int>();
             if (await UserExists(user.Username))
             {
-                response.Success = false;
                 response.Message = "User already exists.";
                 return response;
             }

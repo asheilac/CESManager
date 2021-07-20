@@ -5,7 +5,9 @@ using CESManager.Services.SessionService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace CESManager.Controllers
 {
@@ -24,18 +26,17 @@ namespace CESManager.Controllers
         [HttpGet("GetAll")]
         public async Task<IActionResult> Get()
         {
-            ServiceResponse<List<GetSessionDto>> response;
+            ServiceResponse<List<GetSessionDto>> response = await _sessionService.GetAllSessions();
             try
             {
-                response = await _sessionService.GetAllSessions();
                 if (response.Data == null)
                 {
-                    return BadRequest("There was a problem");
+                    return NotFound(response.StatusCode);
                 }
             }
-            catch 
+            catch
             {
-                return BadRequest("There was a problem");
+                StatusCode(StatusCodes.Status500InternalServerError);
             }
             return Ok(response); 
         }
@@ -44,9 +45,16 @@ namespace CESManager.Controllers
         public async Task<IActionResult> GetSingle(int id)
         {
             ServiceResponse<GetSessionDto> response = await _sessionService.GetSessionById(id);
-            if (response.Data == null)
+            try
             {
-                return NotFound(response);
+                if (response.Data == null)
+                {
+                    return NotFound(response.StatusCode);
+                }
+            }
+            catch
+            {
+                StatusCode(StatusCodes.Status500InternalServerError);
             }
             return Ok(response);
         }
@@ -55,9 +63,16 @@ namespace CESManager.Controllers
         public async Task<IActionResult> AddSession(AddSessionDto newSession)
         {
             ServiceResponse<List<GetSessionDto>> response = await _sessionService.AddSession(newSession);
-            if (response.Data == null)
+            try
             {
-                return BadRequest(response);
+                if (response.Data == null)
+                {
+                    return BadRequest(response.StatusCode);
+                }
+            }
+            catch
+            {
+                StatusCode(StatusCodes.Status500InternalServerError);
             }
             return Ok(response);
         }
@@ -65,14 +80,25 @@ namespace CESManager.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateSession (UpdateSessionDto updatedSession)
         {
-            ServiceResponse<GetSessionDto> response  = await _sessionService.UpdateSession(updatedSession);
-            if (response.Message == "Session not found.")
+            ServiceResponse<GetSessionDto> response = await _sessionService.UpdateSession(updatedSession);
+            try
             {
-                return NotFound(response);
+                if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
+                {
+                    return NotFound(response.StatusCode);
+                }
+                if (response.StatusCode == CESManagerStatusCode.NegativeDuration)
+                {
+                    return BadRequest(response.StatusCode);
+                }
+                if (response.StatusCode == CESManagerStatusCode.InternalServerError)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
             }
-            if (response.Message == "EndDateTime cannot be earlier than StartDateTime.")
+            catch 
             {
-                return BadRequest(response);
+                StatusCode(StatusCodes.Status500InternalServerError);
             }
             return Ok(response);
         }
@@ -81,9 +107,16 @@ namespace CESManager.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             ServiceResponse<List<GetSessionDto>> response = await _sessionService.DeleteSession(id);
-            if (response.Data == null)
+            try
             {
-                return NotFound(response);
+                if (response.Data == null)
+                {
+                    return NotFound(response.StatusCode);
+                }
+            }
+            catch
+            {
+                StatusCode(StatusCodes.Status500InternalServerError);
             }
             return Ok(response);
         }
