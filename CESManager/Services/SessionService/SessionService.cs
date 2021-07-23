@@ -51,6 +51,7 @@ namespace CESManager.Services.SessionService
                 else
                 {
                     serviceResponse.StatusCode = CESManagerStatusCode.NegativeDuration;
+                    serviceResponse.Message = "EndDateTime cannot be earlier than StartDateTime.";
                 }
             }
             catch
@@ -59,7 +60,6 @@ namespace CESManager.Services.SessionService
             }
             return serviceResponse;
         }
-
         public async Task<ServiceResponse<List<GetSessionDto>>> DeleteSession(int id)
         {
             ServiceResponse<List<GetSessionDto>> serviceResponse = new ServiceResponse<List<GetSessionDto>>();
@@ -77,6 +77,7 @@ namespace CESManager.Services.SessionService
                 else
                 {
                     serviceResponse.StatusCode = CESManagerStatusCode.SessionNotFound;
+                    serviceResponse.Message = "Could not find session to Delete.";
                 }
             }
             catch 
@@ -99,6 +100,7 @@ namespace CESManager.Services.SessionService
                 else
                 {
                     serviceResponse.StatusCode = CESManagerStatusCode.SessionNotFound;
+                    serviceResponse.Message = "Could not find sessions.";
                 }
             }
             catch 
@@ -107,7 +109,6 @@ namespace CESManager.Services.SessionService
             }
             return serviceResponse;
         }
-
         public async Task<ServiceResponse<GetSessionDto>> GetSessionById(int id)
         {
             ServiceResponse<GetSessionDto> serviceResponse = new ServiceResponse<GetSessionDto>();
@@ -123,6 +124,7 @@ namespace CESManager.Services.SessionService
                 else
                 {
                     serviceResponse.StatusCode = CESManagerStatusCode.SessionNotFound;
+                    serviceResponse.Message = "Could not find session by Id.";
                 }
             }
             catch 
@@ -155,11 +157,13 @@ namespace CESManager.Services.SessionService
                     else 
                     {
                         serviceResponse.StatusCode = CESManagerStatusCode.NegativeDuration;
+                        serviceResponse.Message = "EndDateTime cannot be earlier than StartDateTime.";
                     }
                 }
                 else
                 {
                     serviceResponse.StatusCode = CESManagerStatusCode.SessionNotFound;
+                    serviceResponse.Message = "Could not find session to update.";
                 }
             }
             catch 

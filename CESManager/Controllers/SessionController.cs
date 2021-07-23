@@ -29,16 +29,16 @@ namespace CESManager.Controllers
             ServiceResponse<List<GetSessionDto>> response = await _sessionService.GetAllSessions();
             try
             {
-                if (response.Data == null)
+                if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
                 {
-                    return NotFound(response.StatusCode);
+                    return NotFound(response.Message);
                 }
             }
             catch
             {
                 StatusCode(StatusCodes.Status500InternalServerError);
             }
-            return Ok(response); 
+            return Ok(response.Data); 
         }
 
         [HttpGet("{id}")]
@@ -47,16 +47,16 @@ namespace CESManager.Controllers
             ServiceResponse<GetSessionDto> response = await _sessionService.GetSessionById(id);
             try
             {
-                if (response.Data == null)
+                if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
                 {
-                    return NotFound(response.StatusCode);
+                    return NotFound(response.Message);
                 }
             }
             catch
             {
                 StatusCode(StatusCodes.Status500InternalServerError);
             }
-            return Ok(response);
+            return Ok(response.Data);
         }
 
         [HttpPost]
@@ -65,16 +65,16 @@ namespace CESManager.Controllers
             ServiceResponse<List<GetSessionDto>> response = await _sessionService.AddSession(newSession);
             try
             {
-                if (response.Data == null)
+                if (response.StatusCode == CESManagerStatusCode.NegativeDuration)
                 {
-                    return BadRequest(response.StatusCode);
+                    return BadRequest(response.Message);
                 }
             }
             catch
             {
                 StatusCode(StatusCodes.Status500InternalServerError);
             }
-            return Ok(response);
+            return Ok(response.Data);
         }
 
         [HttpPut]
@@ -85,22 +85,18 @@ namespace CESManager.Controllers
             {
                 if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
                 {
-                    return NotFound(response.StatusCode);
+                    return NotFound(response.Message);
                 }
                 if (response.StatusCode == CESManagerStatusCode.NegativeDuration)
                 {
-                    return BadRequest(response.StatusCode);
-                }
-                if (response.StatusCode == CESManagerStatusCode.InternalServerError)
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError);
+                    return BadRequest(response.Message);
                 }
             }
             catch 
             {
                 StatusCode(StatusCodes.Status500InternalServerError);
             }
-            return Ok(response);
+            return Ok(response.Data);
         }
 
         [HttpDelete("{id}")]
@@ -109,16 +105,16 @@ namespace CESManager.Controllers
             ServiceResponse<List<GetSessionDto>> response = await _sessionService.DeleteSession(id);
             try
             {
-                if (response.Data == null)
+                if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
                 {
-                    return NotFound(response.StatusCode);
+                    return NotFound(response.Message);
                 }
             }
             catch
             {
                 StatusCode(StatusCodes.Status500InternalServerError);
             }
-            return Ok(response);
+            return Ok(response.Data);
         }
     }
 }
