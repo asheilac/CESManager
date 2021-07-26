@@ -86,8 +86,8 @@ namespace Tests.IntegrationTests.ControllerTests
         public async Task GetSessions()
         {
             var response = await _httpClient.GetAsync(_urlGetAll);
-            var sessionId = await GetObjectFromResponse<ServiceResponse<List<GetSessionDto>>>(response);
-            _sessions = sessionId.Data;
+            var sessionId = await GetObjectFromResponse<List<GetSessionDto>>(response);
+            _sessions = sessionId;
         }
 
         [Test]
@@ -98,12 +98,12 @@ namespace Tests.IntegrationTests.ControllerTests
 
             // Act
             var response = await _httpClient.GetAsync(_urlGetAll);
-            var session = await GetObjectFromResponse<ServiceResponse<List<GetSessionDto>>>(response);
+            var session = await GetObjectFromResponse<List<GetSessionDto>>(response);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            session.Data.Count.Should().Be(1);
-            session.Data.First().EndDateTime.Should().Be(expectedDateTime);
+            session.Count.Should().Be(1);
+            session.First().EndDateTime.Should().Be(expectedDateTime);
         }
 
         [Test]
