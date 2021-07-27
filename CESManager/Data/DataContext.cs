@@ -6,10 +6,6 @@ namespace CESManager.Data
 {
     public class DataContext : DbContext
     {
-        public DataContext()
-        {
-        }
-
         public DataContext(DbContextOptions<DataContext> options) : base(options) { }
         public virtual DbSet<Session> Sessions { get; set; }
         public virtual DbSet<User> Users { get; set; }

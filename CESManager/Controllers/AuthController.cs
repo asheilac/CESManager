@@ -22,7 +22,7 @@ namespace CESManager.Controllers
             ServiceResponse<int> response = await _authRepo.Register(
                 new User {Username = request.Username}, request.Password
             );
-            if(!response.Success)
+            if(response.StatusCode == CESManagerStatusCode.InvalidRegister)
             {
                 return BadRequest(response);
             }
@@ -35,7 +35,7 @@ namespace CESManager.Controllers
             ServiceResponse<string> response = await _authRepo.Login(
                 request.Username, request.Password
             );
-            if(!response.Success)
+            if(response.StatusCode == CESManagerStatusCode.InvalidRegister)
             {
                 return BadRequest(response);
             }

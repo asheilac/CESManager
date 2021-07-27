@@ -27,16 +27,17 @@ namespace CESManager.Data
             if (user == null)
             {
                 response.Message = "User not found.";
+                response.StatusCode = CESManagerStatusCode.InvalidLogin;
             }
             else if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
             {
                 response.Message = "Wrong password";
+                response.StatusCode = CESManagerStatusCode.InvalidLogin;
             }
             else
             {
                 response.Data = CreateToken(user);
             }
-
             return response;
         }
 
@@ -46,6 +47,7 @@ namespace CESManager.Data
             if (await UserExists(user.Username))
             {
                 response.Message = "User already exists.";
+                response.StatusCode = CESManagerStatusCode.InvalidRegister;
                 return response;
             }
 

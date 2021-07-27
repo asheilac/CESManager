@@ -114,11 +114,11 @@ namespace Tests.IntegrationTests.ControllerTests
 
             // Act
             var response = await _httpClient.GetAsync(_urlSession + _sessions.First().Id);
-            var session = await GetObjectFromResponse<ServiceResponse<GetSessionDto>>(response);
+            var session = await GetObjectFromResponse<GetSessionDto>(response);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            session.Data.EndDateTime.Should().Be(expectedDateTime);
+            session.EndDateTime.Should().Be(expectedDateTime);
         }
 
         [Test]
@@ -196,11 +196,11 @@ namespace Tests.IntegrationTests.ControllerTests
             // Act
             var content = GetStringContent(json);
             var response = await _httpClient.PostAsync(_urlSession, content);
-            var session = await GetObjectFromResponse<ServiceResponse<List<GetSessionDto>>>(response);
+            var session = await GetObjectFromResponse<List<GetSessionDto>>(response);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            session.Data.Count.Should().Be(2);
+            session.Count.Should().Be(2);
         }
 
         [Test]
@@ -216,11 +216,10 @@ namespace Tests.IntegrationTests.ControllerTests
             // Act
             var content = GetStringContent(json);
             var response = await _httpClient.PostAsync(_urlSession, content);
-            var session = await GetObjectFromResponse<ServiceResponse<List<GetSessionDto>>>(response);
+            //var session = await GetObjectFromResponse<List<GetSessionDto>>(response);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            session.Message.Should().Be("EndDateTime cannot be earlier than StartDateTime.");
         }
 
         [Test]
@@ -238,11 +237,11 @@ namespace Tests.IntegrationTests.ControllerTests
             // Act
             var content = GetStringContent(json);
             var response = await _httpClient.PutAsync(_urlSession, content);
-            var session = await GetObjectFromResponse<ServiceResponse<GetSessionDto>>(response);
+            var session = await GetObjectFromResponse<GetSessionDto>(response);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            session.Data.EndDateTime.Should().Be(expectedDateTime);
+            session.EndDateTime.Should().Be(expectedDateTime);
         }
 
         [Test]
@@ -259,11 +258,10 @@ namespace Tests.IntegrationTests.ControllerTests
             // Act
             var content = GetStringContent(json);
             var response = await _httpClient.PutAsync(_urlSession, content);
-            var session = await GetObjectFromResponse<ServiceResponse<GetSessionDto>>(response);
+            //var session = await GetObjectFromResponse<GetSessionDto>(response);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);            
-            session.Message.Should().Be("Session not found.");
         }
 
         [Test]
@@ -280,11 +278,10 @@ namespace Tests.IntegrationTests.ControllerTests
             // Act
             var content = GetStringContent(json);
             var response = await _httpClient.PutAsync(_urlSession, content);
-            var session = await GetObjectFromResponse<ServiceResponse<GetSessionDto>>(response);
+            //var session = await GetObjectFromResponse<GetSessionDto>(response);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            session.Message.Should().Be("EndDateTime cannot be earlier than StartDateTime.");
         }
 
         [Test]

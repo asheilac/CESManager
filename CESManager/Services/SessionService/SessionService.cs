@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -15,9 +14,9 @@ namespace CESManager.Services.SessionService
 {
     public class SessionService : ISessionService
     {
-        private readonly IMapper _mapper;
         private readonly DataContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMapper _mapper;
 
         public SessionService(IMapper mapper, DataContext context, IHttpContextAccessor httpContextAccessor)
         {
@@ -26,17 +25,14 @@ namespace CESManager.Services.SessionService
             _mapper = mapper;
         }
 
-        private int GetUserId() =>
-            int.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
-
         public async Task<ServiceResponse<List<GetSessionDto>>> AddSession(AddSessionDto newSession)
         {
-            ServiceResponse<List<GetSessionDto>> serviceResponse = new ServiceResponse<List<GetSessionDto>>();
+            var serviceResponse = new ServiceResponse<List<GetSessionDto>>();
             try
             {
-                Session session = _mapper.Map<Session>(newSession);
+                var session = _mapper.Map<Session>(newSession);
                 session.User = await _context.Users.FirstOrDefaultAsync(u => u.Id == GetUserId());
-                double result = newSession.Duration;
+                var result = newSession.Duration;
                 if (result > 0)
                 {
                     session.StartDateTime = newSession.StartDateTime;
@@ -45,8 +41,8 @@ namespace CESManager.Services.SessionService
                     await _context.Sessions.AddAsync(session);
                     await _context.SaveChangesAsync();
 
-                    serviceResponse.Data = (_context.Sessions.Where(s => s.User.Id == GetUserId())
-                        .Select(s => _mapper.Map<GetSessionDto>(s))).ToList();
+                    serviceResponse.Data = _context.Sessions.Where(s => s.User.Id == GetUserId())
+                        .Select(s => _mapper.Map<GetSessionDto>(s)).ToList();
                 }
                 else
                 {
@@ -58,21 +54,23 @@ namespace CESManager.Services.SessionService
             {
                 serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
+
             return serviceResponse;
         }
+
         public async Task<ServiceResponse<List<GetSessionDto>>> DeleteSession(int id)
         {
-            ServiceResponse<List<GetSessionDto>> serviceResponse = new ServiceResponse<List<GetSessionDto>>();
+            var serviceResponse = new ServiceResponse<List<GetSessionDto>>();
             try
             {
-                Session session = await _context.Sessions
+                var session = await _context.Sessions
                     .FirstOrDefaultAsync(s => s.Id == id && s.User.Id == GetUserId());
                 if (session != null)
                 {
                     _context.Sessions.Remove(session);
                     await _context.SaveChangesAsync();
-                    serviceResponse.Data = (_context.Sessions.Where(s => s.User.Id == GetUserId())
-                        .Select(s => _mapper.Map<GetSessionDto>(s))).ToList();
+                    serviceResponse.Data = _context.Sessions.Where(s => s.User.Id == GetUserId())
+                        .Select(s => _mapper.Map<GetSessionDto>(s)).ToList();
                 }
                 else
                 {
@@ -80,22 +78,23 @@ namespace CESManager.Services.SessionService
                     serviceResponse.Message = "Could not find session to Delete.";
                 }
             }
-            catch 
+            catch (Exception e)
             {
                 serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
+
             return serviceResponse;
         }
 
         public async Task<ServiceResponse<List<GetSessionDto>>> GetAllSessions()
         {
-            ServiceResponse<List<GetSessionDto>> serviceResponse = new ServiceResponse<List<GetSessionDto>>();
+            var serviceResponse = new ServiceResponse<List<GetSessionDto>>();
             try
             {
-                List<Session> dbSessions = await _context.Sessions.Where(c => c.User.Id == GetUserId()).ToListAsync();
+                var dbSessions = await _context.Sessions.Where(c => c.User.Id == GetUserId()).ToListAsync();
                 if (dbSessions != null)
                 {
-                    serviceResponse.Data = (dbSessions.Select(s => _mapper.Map<GetSessionDto>(s))).ToList();
+                    serviceResponse.Data = dbSessions.Select(s => _mapper.Map<GetSessionDto>(s)).ToList();
                 }
                 else
                 {
@@ -103,47 +102,48 @@ namespace CESManager.Services.SessionService
                     serviceResponse.Message = "Could not find sessions.";
                 }
             }
-            catch 
+            catch
             {
                 serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
+
             return serviceResponse;
         }
+
         public async Task<ServiceResponse<GetSessionDto>> GetSessionById(int id)
         {
-            ServiceResponse<GetSessionDto> serviceResponse = new ServiceResponse<GetSessionDto>();
+            var serviceResponse = new ServiceResponse<GetSessionDto>();
             try
             {
-                Session dbSession = await _context.Sessions
-                    .FirstOrDefaultAsync(s => s.Id == id & s.User.Id == GetUserId());
+                var dbSession = await _context.Sessions
+                    .FirstOrDefaultAsync(s => (s.Id == id) & (s.User.Id == GetUserId()));
                 if (dbSession != null)
                 {
                     serviceResponse.Data = _mapper.Map<GetSessionDto>(dbSession);
                     return serviceResponse;
                 }
-                else
-                {
-                    serviceResponse.StatusCode = CESManagerStatusCode.SessionNotFound;
-                    serviceResponse.Message = "Could not find session by Id.";
-                }
+
+                serviceResponse.StatusCode = CESManagerStatusCode.SessionNotFound;
+                serviceResponse.Message = "Could not find session by Id.";
             }
-            catch 
+            catch
             {
                 serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
+
             return serviceResponse;
         }
 
         public async Task<ServiceResponse<GetSessionDto>> UpdateSession(UpdateSessionDto updatedSession)
         {
-            ServiceResponse<GetSessionDto> serviceResponse = new ServiceResponse<GetSessionDto>();
+            var serviceResponse = new ServiceResponse<GetSessionDto>();
             try
             {
-                Session session = await _context.Sessions.Include(s => s.User)
+                var session = await _context.Sessions.Include(s => s.User)
                     .FirstOrDefaultAsync(s => s.Id == updatedSession.Id);
                 if (session != null && session.User.Id == GetUserId())
                 {
-                    double result = updatedSession.Duration;
+                    var result = updatedSession.Duration;
                     if (result > 0)
                     {
                         session.StartDateTime = updatedSession.StartDateTime;
@@ -154,7 +154,7 @@ namespace CESManager.Services.SessionService
 
                         serviceResponse.Data = _mapper.Map<GetSessionDto>(session);
                     }
-                    else 
+                    else
                     {
                         serviceResponse.StatusCode = CESManagerStatusCode.NegativeDuration;
                         serviceResponse.Message = "EndDateTime cannot be earlier than StartDateTime.";
@@ -166,11 +166,17 @@ namespace CESManager.Services.SessionService
                     serviceResponse.Message = "Could not find session to update.";
                 }
             }
-            catch 
+            catch
             {
                 serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
+
             return serviceResponse;
+        }
+
+        private int GetUserId()
+        {
+            return int.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
         }
     }
 }
