@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using NUnit.Framework;
 
 namespace CESManager.Controllers
 {
@@ -17,16 +19,18 @@ namespace CESManager.Controllers
     public class SessionController : ControllerBase
     {
         private readonly ISessionService _sessionService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public SessionController(ISessionService sessionService)
+        public SessionController(ISessionService sessionService, IHttpContextAccessor httpContextAccessor)
         {
             _sessionService = sessionService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpGet("GetAll")]
         public async Task<IActionResult> Get()
         {
-            ServiceResponse<List<GetSessionDto>> response = await _sessionService.GetAllSessions();
+            ServiceResponse<List<GetSessionDto>> response = await _sessionService.GetAllSessions(UserId);
             try
             {
                 if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
@@ -44,7 +48,7 @@ namespace CESManager.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetSingle(int id)
         {
-            ServiceResponse<GetSessionDto> response = await _sessionService.GetSessionById(id);
+            ServiceResponse<GetSessionDto> response = await _sessionService.GetSessionById(id, UserId);
             try
             {
                 if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
@@ -62,6 +66,7 @@ namespace CESManager.Controllers
         [HttpPost]
         public async Task<IActionResult> AddSession(AddSessionDto newSession)
         {
+            newSession.UserId = UserId;
             ServiceResponse<List<GetSessionDto>> response = await _sessionService.AddSession(newSession);
             try
             {
@@ -80,6 +85,7 @@ namespace CESManager.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateSession (UpdateSessionDto updatedSession)
         {
+            updatedSession.UserId = UserId;
             ServiceResponse<GetSessionDto> response = await _sessionService.UpdateSession(updatedSession);
             try
             {
@@ -102,7 +108,7 @@ namespace CESManager.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            ServiceResponse<List<GetSessionDto>> response = await _sessionService.DeleteSession(id);
+            ServiceResponse<List<GetSessionDto>> response = await _sessionService.DeleteSession(id, UserId);
             try
             {
                 if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
@@ -116,5 +122,8 @@ namespace CESManager.Controllers
             }
             return Ok(response.Data);
         }
+
+        private int UserId => int.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        
     }
 }

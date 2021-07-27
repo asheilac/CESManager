@@ -23,12 +23,8 @@ namespace Tests.UnitTests.Services
                 .Options;
             await using var dbContext = new DataContext(options);
 
-            var fakeHttpContextAccessor = A.Fake<IHttpContextAccessor>();
-            A.CallTo(() => fakeHttpContextAccessor.HttpContext.User)
-                .Returns(new ClaimsPrincipal(new ClaimsIdentity(new[] {new Claim(ClaimTypes.NameIdentifier, "42")})));
-
-            var sut = new SessionService(A.Fake<IMapper>(), dbContext, fakeHttpContextAccessor);
-            var result = await sut.DeleteSession(1);
+            var sut = new SessionService(A.Fake<IMapper>(), dbContext);
+            var result = await sut.DeleteSession(1, 42);
 
             result.StatusCode.Should().Be(CESManagerStatusCode.SessionNotFound);
         }

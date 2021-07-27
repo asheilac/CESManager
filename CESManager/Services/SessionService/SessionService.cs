@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
 using CESManager.Data;
 using CESManager.Dtos.Session;
 using CESManager.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace CESManager.Services.SessionService
@@ -15,12 +13,10 @@ namespace CESManager.Services.SessionService
     public class SessionService : ISessionService
     {
         private readonly DataContext _context;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
 
-        public SessionService(IMapper mapper, DataContext context, IHttpContextAccessor httpContextAccessor)
+        public SessionService(IMapper mapper, DataContext context)
         {
-            _httpContextAccessor = httpContextAccessor;
             _context = context;
             _mapper = mapper;
         }
@@ -31,7 +27,7 @@ namespace CESManager.Services.SessionService
             try
             {
                 var session = _mapper.Map<Session>(newSession);
-                session.User = await _context.Users.FirstOrDefaultAsync(u => u.Id == GetUserId());
+                session.User = await _context.Users.FirstOrDefaultAsync(u => u.Id == newSession.UserId);
                 var result = newSession.Duration;
                 if (result > 0)
                 {
@@ -41,7 +37,7 @@ namespace CESManager.Services.SessionService
                     await _context.Sessions.AddAsync(session);
                     await _context.SaveChangesAsync();
 
-                    serviceResponse.Data = _context.Sessions.Where(s => s.User.Id == GetUserId())
+                    serviceResponse.Data = _context.Sessions.Where(s => s.User.Id == session.UserId)
                         .Select(s => _mapper.Map<GetSessionDto>(s)).ToList();
                 }
                 else
@@ -58,18 +54,18 @@ namespace CESManager.Services.SessionService
             return serviceResponse;
         }
 
-        public async Task<ServiceResponse<List<GetSessionDto>>> DeleteSession(int id)
+        public async Task<ServiceResponse<List<GetSessionDto>>> DeleteSession(int id, int userId)
         {
             var serviceResponse = new ServiceResponse<List<GetSessionDto>>();
             try
             {
                 var session = await _context.Sessions
-                    .FirstOrDefaultAsync(s => s.Id == id && s.User.Id == GetUserId());
+                    .FirstOrDefaultAsync(s => s.Id == id && s.User.Id == userId);
                 if (session != null)
                 {
                     _context.Sessions.Remove(session);
                     await _context.SaveChangesAsync();
-                    serviceResponse.Data = _context.Sessions.Where(s => s.User.Id == GetUserId())
+                    serviceResponse.Data = _context.Sessions.Where(s => s.User.Id == userId)
                         .Select(s => _mapper.Map<GetSessionDto>(s)).ToList();
                 }
                 else
@@ -86,12 +82,12 @@ namespace CESManager.Services.SessionService
             return serviceResponse;
         }
 
-        public async Task<ServiceResponse<List<GetSessionDto>>> GetAllSessions()
+        public async Task<ServiceResponse<List<GetSessionDto>>> GetAllSessions(int userId)
         {
             var serviceResponse = new ServiceResponse<List<GetSessionDto>>();
             try
             {
-                var dbSessions = await _context.Sessions.Where(c => c.User.Id == GetUserId()).ToListAsync();
+                var dbSessions = await _context.Sessions.Where(c => c.User.Id == userId).ToListAsync();
                 if (dbSessions != null)
                 {
                     serviceResponse.Data = dbSessions.Select(s => _mapper.Map<GetSessionDto>(s)).ToList();
@@ -110,13 +106,13 @@ namespace CESManager.Services.SessionService
             return serviceResponse;
         }
 
-        public async Task<ServiceResponse<GetSessionDto>> GetSessionById(int id)
+        public async Task<ServiceResponse<GetSessionDto>> GetSessionById(int id, int userId)
         {
             var serviceResponse = new ServiceResponse<GetSessionDto>();
             try
             {
                 var dbSession = await _context.Sessions
-                    .FirstOrDefaultAsync(s => (s.Id == id) & (s.User.Id == GetUserId()));
+                    .FirstOrDefaultAsync(s => s.Id == id && s.User.Id == userId);
                 if (dbSession != null)
                 {
                     serviceResponse.Data = _mapper.Map<GetSessionDto>(dbSession);
@@ -141,7 +137,7 @@ namespace CESManager.Services.SessionService
             {
                 var session = await _context.Sessions.Include(s => s.User)
                     .FirstOrDefaultAsync(s => s.Id == updatedSession.Id);
-                if (session != null && session.User.Id == GetUserId())
+                if (session != null && session.User.Id == session.UserId)
                 {
                     var result = updatedSession.Duration;
                     if (result > 0)
@@ -172,11 +168,6 @@ namespace CESManager.Services.SessionService
             }
 
             return serviceResponse;
-        }
-
-        private int GetUserId()
-        {
-            return int.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
         }
     }
 }
