@@ -16,17 +16,40 @@ namespace Tests.UnitTests.Services
     [Category("UnitTests")]
     public class SessionServiceUnitTests
     {
+        private SessionService _sut;
+
+        [SetUp]
+        public void Setup()
+        {
+            var options = new DbContextOptionsBuilder<DataContext>()
+                .UseInMemoryDatabase("SessionUnitTestDatabase")
+                .Options;
+            var dbContext = new DataContext(options);
+
+             _sut = new SessionService(A.Fake<IMapper>(), dbContext);
+        }
+
         [Test]
         public async Task DeleteSession_ReturnsNotFound_WhenSessionDoesNotExist()
         {
-            var options = new DbContextOptionsBuilder<DataContext>().UseInMemoryDatabase("SessionUnitTestDatabase")
-                .Options;
-            await using var dbContext = new DataContext(options);
-
-            var sut = new SessionService(A.Fake<IMapper>(), dbContext);
-            var result = await sut.DeleteSession(1, 42);
+            var result = await _sut.DeleteSession(1, 42);
 
             result.StatusCode.Should().Be(CESManagerStatusCode.SessionNotFound);
         }
+
+        [Test]
+        public async Task DeleteSession_ReturnsExpectedErrorMessage_WhenSessionDoesNotExist()
+        {
+            var result = await _sut.DeleteSession(1, 42);
+
+            result.Message.Should().Be("Could not find session to Delete.");
+        }
+
+        [Test]
+        public async Task DeleteSession_ReturnsOK_WhenSessionExists()
+        {
+
+        }
+
     }
 }
