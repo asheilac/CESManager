@@ -37,8 +37,10 @@ namespace CESManager.Services.SessionService
                     await _context.Sessions.AddAsync(session);
                     await _context.SaveChangesAsync();
 
-                    serviceResponse.Data = _context.Sessions.Where(s => s.User.Id == session.UserId)
+                    serviceResponse.Data = _context.Sessions
+                        .Where(s => s.User.Id == session.UserId)
                         .Select(s => _mapper.Map<GetSessionDto>(s)).ToList();
+                    serviceResponse.StatusCode = CESManagerStatusCode.Ok;
                 }
                 else
                 {
@@ -50,7 +52,6 @@ namespace CESManager.Services.SessionService
             {
                 serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
-
             return serviceResponse;
         }
 
@@ -65,8 +66,10 @@ namespace CESManager.Services.SessionService
                 {
                     _context.Sessions.Remove(session);
                     await _context.SaveChangesAsync();
-                    serviceResponse.Data = _context.Sessions.Where(s => s.User.Id == userId)
+                    serviceResponse.Data = _context.Sessions
+                        .Where(s => s.User.Id == userId)
                         .Select(s => _mapper.Map<GetSessionDto>(s)).ToList();
+                    serviceResponse.StatusCode = CESManagerStatusCode.Ok;
                 }
                 else
                 {
@@ -78,7 +81,6 @@ namespace CESManager.Services.SessionService
             {
                 serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
-
             return serviceResponse;
         }
 
@@ -88,9 +90,10 @@ namespace CESManager.Services.SessionService
             try
             {
                 var dbSessions = await _context.Sessions.Where(c => c.User.Id == userId).ToListAsync();
-                if (dbSessions != null)
+                if (dbSessions.Any())
                 {
                     serviceResponse.Data = dbSessions.Select(s => _mapper.Map<GetSessionDto>(s)).ToList();
+                    serviceResponse.StatusCode = CESManagerStatusCode.Ok;
                 }
                 else
                 {
@@ -102,7 +105,6 @@ namespace CESManager.Services.SessionService
             {
                 serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
-
             return serviceResponse;
         }
 
@@ -116,6 +118,7 @@ namespace CESManager.Services.SessionService
                 if (dbSession != null)
                 {
                     serviceResponse.Data = _mapper.Map<GetSessionDto>(dbSession);
+                    serviceResponse.StatusCode = CESManagerStatusCode.Ok;
                     return serviceResponse;
                 }
 
@@ -126,7 +129,6 @@ namespace CESManager.Services.SessionService
             {
                 serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
-
             return serviceResponse;
         }
 
@@ -144,11 +146,10 @@ namespace CESManager.Services.SessionService
                     {
                         session.StartDateTime = updatedSession.StartDateTime;
                         session.EndDateTime = updatedSession.EndDateTime;
-
                         _context.Sessions.Update(session);
                         await _context.SaveChangesAsync();
-
                         serviceResponse.Data = _mapper.Map<GetSessionDto>(session);
+                        serviceResponse.StatusCode = CESManagerStatusCode.Ok;
                     }
                     else
                     {
@@ -166,7 +167,6 @@ namespace CESManager.Services.SessionService
             {
                 serviceResponse.StatusCode = CESManagerStatusCode.InternalServerError;
             }
-
             return serviceResponse;
         }
     }
