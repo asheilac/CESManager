@@ -5,7 +5,11 @@ using CESManager.Services.SessionService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using NUnit.Framework;
 
 namespace CESManager.Controllers
 {
@@ -15,77 +19,111 @@ namespace CESManager.Controllers
     public class SessionController : ControllerBase
     {
         private readonly ISessionService _sessionService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public SessionController(ISessionService sessionService)
+        public SessionController(ISessionService sessionService, IHttpContextAccessor httpContextAccessor)
         {
             _sessionService = sessionService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpGet("GetAll")]
         public async Task<IActionResult> Get()
         {
-            ServiceResponse<List<GetSessionDto>> response;
+            ServiceResponse<List<GetSessionDto>> response = await _sessionService.GetAllSessions(UserId);
             try
             {
-                response = await _sessionService.GetAllSessions();
-                if (response.Data == null)
+                if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
                 {
-                    return BadRequest("There was a problem");
+                    return NotFound(response.Message);
                 }
             }
-            catch 
+            catch
             {
-                return BadRequest("There was a problem");
+                StatusCode(StatusCodes.Status500InternalServerError);
             }
-            return Ok(response); 
+            return Ok(response.Data); 
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetSingle(int id)
         {
-            ServiceResponse<GetSessionDto> response = await _sessionService.GetSessionById(id);
-            if (response.Data == null)
+            ServiceResponse<GetSessionDto> response = await _sessionService.GetSessionById(id, UserId);
+            try
             {
-                return NotFound(response);
+                if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
+                {
+                    return NotFound(response.Message);
+                }
             }
-            return Ok(response);
+            catch
+            {
+                StatusCode(StatusCodes.Status500InternalServerError);
+            }
+            return Ok(response.Data);
         }
 
         [HttpPost]
         public async Task<IActionResult> AddSession(AddSessionDto newSession)
         {
+            newSession.UserId = UserId;
             ServiceResponse<List<GetSessionDto>> response = await _sessionService.AddSession(newSession);
-            if (response.Data == null)
+            try
             {
-                return BadRequest(response);
+                if (response.StatusCode == CESManagerStatusCode.NegativeDuration)
+                {
+                    return BadRequest(response.Message);
+                }
             }
-            return Ok(response);
+            catch
+            {
+                StatusCode(StatusCodes.Status500InternalServerError);
+            }
+            return Ok(response.Data);
         }
 
         [HttpPut]
         public async Task<IActionResult> UpdateSession (UpdateSessionDto updatedSession)
         {
-            ServiceResponse<GetSessionDto> response  = await _sessionService.UpdateSession(updatedSession);
-            if (response.Message == "Session not found.")
+            updatedSession.UserId = UserId;
+            ServiceResponse<GetSessionDto> response = await _sessionService.UpdateSession(updatedSession);
+            try
             {
-                return NotFound(response);
+                if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
+                {
+                    return NotFound(response.Message);
+                }
+                if (response.StatusCode == CESManagerStatusCode.NegativeDuration)
+                {
+                    return BadRequest(response.Message);
+                }
             }
-            if (response.Message == "EndDateTime cannot be earlier than StartDateTime.")
+            catch 
             {
-                return BadRequest(response);
+                StatusCode(StatusCodes.Status500InternalServerError);
             }
-            return Ok(response);
+            return Ok(response.Data);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            ServiceResponse<List<GetSessionDto>> response = await _sessionService.DeleteSession(id);
-            if (response.Data == null)
+            ServiceResponse<List<GetSessionDto>> response = await _sessionService.DeleteSession(id, UserId);
+            try
             {
-                return NotFound(response);
+                if (response.StatusCode == CESManagerStatusCode.SessionNotFound)
+                {
+                    return NotFound(response.Message);
+                }
             }
-            return Ok(response);
+            catch
+            {
+                StatusCode(StatusCodes.Status500InternalServerError);
+            }
+            return Ok(response.Data);
         }
+
+        private int UserId => int.Parse(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
+        
     }
 }

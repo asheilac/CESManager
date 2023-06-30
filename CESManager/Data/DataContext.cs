@@ -7,8 +7,8 @@ namespace CESManager.Data
     public class DataContext : DbContext
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options) { }
-        public DbSet<Session> Sessions { get; set; }
-        public DbSet<User> Users { get; set; }
+        public virtual DbSet<Session> Sessions { get; set; }
+        public virtual DbSet<User> Users { get; set; }
 
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{

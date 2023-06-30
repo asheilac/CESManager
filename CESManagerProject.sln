@@ -1,11 +1,11 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{2F85978C-4407-4F38-AF28-8872F3D8B361}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{2F85978C-4407-4F38-AF28-8872F3D8B361}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CESManager", "CESManager\CESManager.csproj", "{619D3E24-E334-47D1-8A14-FD4B5A9D9DE7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CESManager", "CESManager\CESManager.csproj", "{619D3E24-E334-47D1-8A14-FD4B5A9D9DE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

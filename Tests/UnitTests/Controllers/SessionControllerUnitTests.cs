@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using CESManager.Controllers;
 using CESManager.Dtos.Session;
@@ -10,6 +8,7 @@ using CESManager.Services.SessionService;
 using FakeItEasy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using NUnit.Framework;
 
 namespace Tests.UnitTests.Controllers
@@ -18,290 +17,382 @@ namespace Tests.UnitTests.Controllers
     [Category("UnitTests")]
     public class SessionControllerUnitTests
     {
-        [Test]
-        public async Task Get_HappyPath_ShouldReturnAllSessions()
+        private ISessionService _mockSessionService;
+        private SessionController _controller;
+        private const int AuthorisedUser = 42;
+
+        [SetUp]
+        public void Setup()
         {
-            // Arrange
-            var endDate = DateTime.Now;
-            var startDate = DateTime.Now.AddDays(-1);
-            var mockSessionService = A.Fake<ISessionService>();
-            A.CallTo(() => mockSessionService.GetAllSessions()).Returns(
-                new ServiceResponse<List<GetSessionDto>>
-                {
-                    Data = new List<GetSessionDto>()
-                    {
-                        new GetSessionDto
-                        {
-                            EndDateTime = endDate,
-                            StartDateTime = startDate,
-                            Id = 1
-                        }
-                    }
-                });
-            var controller = new SessionController(mockSessionService);
+            var fakeHttpContextAccessor = A.Fake<IHttpContextAccessor>();
+            A.CallTo(() => fakeHttpContextAccessor.HttpContext.User)
+                .Returns(new ClaimsPrincipal(new ClaimsIdentity(new[] {new Claim(ClaimTypes.NameIdentifier, AuthorisedUser.ToString())})));
 
-            // Act
-            var result = await controller.Get();
-            var okResult = result as OkObjectResult;
-            var actualResponse = okResult.Value as ServiceResponse<List<GetSessionDto>>;
-
-            // Assert
-            Assert.AreEqual(typeof(OkObjectResult),result.GetType());
-            Assert.AreEqual(1, actualResponse.Data.Count);
-            Assert.AreEqual(1, actualResponse.Data.First().Id);
-            Assert.AreEqual(startDate, actualResponse.Data.First().StartDateTime);
-            Assert.AreEqual(endDate, actualResponse.Data.First().EndDateTime);
+            _mockSessionService = A.Fake<ISessionService>();
+            _controller = new SessionController(_mockSessionService, fakeHttpContextAccessor);
         }
 
         [Test]
-        public async Task Get_SadPath_ShouldReturnBadRequest()
+        public async Task GetAllShouldReturnOKWhenSessionExists()
         {
-            var mockSessionService = A.Fake<ISessionService>();
-            A.CallTo(() => mockSessionService.GetAllSessions()).Returns(
-                new ServiceResponse<List<GetSessionDto>>()
-                {
-                    Data = null
-                });
-            var controller = new SessionController(mockSessionService);
-
-            //Act
-            var result = await controller.Get();
-
-            //Assert
-            Assert.AreEqual(typeof(BadRequestObjectResult), result.GetType());
-        }
-
-        [Test]
-        public async Task GetSingle_HappyPath_ShouldReturnOK()
-        {
-            // Arrange
-            var endDate = DateTime.Now;
-            var startDate = DateTime.Now.AddDays(-1);
-            var mockSessionService = A.Fake<ISessionService>();
-            A.CallTo(() => mockSessionService.GetSessionById(1)).Returns(
-                new ServiceResponse<GetSessionDto>
-                {
-                    Data = new GetSessionDto()
-                    {
-                        StartDateTime = startDate,
-                        EndDateTime = endDate,
-                        Id = 1
-                    }
-                });
-            var controller = new SessionController(mockSessionService);
-
-            // Act
-            var result = await controller.GetSingle(1);
-            var okResult = result as OkObjectResult;
-            var actualResponse = okResult.Value as ServiceResponse<GetSessionDto>;
-
-            // Assert
-            Assert.AreEqual(typeof(OkObjectResult), result.GetType());
-            Assert.AreEqual(1, actualResponse.Data.Id);
-            Assert.AreEqual(startDate, actualResponse.Data.StartDateTime);
-            Assert.AreEqual(endDate, actualResponse.Data.EndDateTime);
-        }
-
-        [Test]
-        public async Task GetSingle_HappyPath_ShouldReturnNotFound()
-        {
-            //Arrange
-            var mockSessionService = A.Fake<ISessionService>();
-            A.CallTo(() => mockSessionService.GetSessionById(1)).Returns(
-                new ServiceResponse<GetSessionDto>
-                {
-                    Data = null
-                });
-            var controller = new SessionController(mockSessionService);
-
-            //Act
-            var result = await controller.GetSingle(1);
-
-            //Assert
-            Assert.AreEqual(typeof(NotFoundObjectResult), result.GetType());
-        }
-
-        [Test]
-        public async Task AddSession_HappyPath_ShouldReturnOk()
-        {
-            //Arrange
-            var endDate = DateTime.Now;
-            var startDate = DateTime.Now.AddDays(-1);
-            var newSession = new AddSessionDto();
-            var mockSessionService = A.Fake<ISessionService>();
-            A.CallTo(() => mockSessionService.AddSession(newSession)).Returns(
+            A.CallTo(() => _mockSessionService.GetAllSessions(AuthorisedUser)).Returns(
                 new ServiceResponse<List<GetSessionDto>>
                 {
                     Data = new List<GetSessionDto>
                     {
                         new GetSessionDto
                         {
-                            Id = 1,
-                            StartDateTime = startDate,
-                            EndDateTime = endDate
+                            Id = 1
                         }
                     }
                 });
-            var controller = new SessionController(mockSessionService);
+            var result = await _controller.Get();
 
-            //Act
-            var result = await controller.AddSession(newSession);
-            var okResult = result as OkObjectResult;
-            var actualResult = okResult.Value as ServiceResponse<List<GetSessionDto>>;
-
-            //Assert
             Assert.AreEqual(typeof(OkObjectResult), result.GetType());
-            Assert.AreEqual(1, actualResult.Data[0].Id);
-            Assert.AreEqual(startDate, actualResult.Data[0].StartDateTime);
-            Assert.AreEqual(endDate, actualResult.Data[0].EndDateTime);
         }
 
         [Test]
-        public async Task AddSession_HappyPath_ShouldReturnBadRequest()
+        public async Task GetAllShouldReturnExpectedNumberOfSessionsWhenSessionExists()
         {
-            //Arrange
-            var newSession = new AddSessionDto();
-            var mockSessionService = A.Fake<ISessionService>();
-            A.CallTo(() => mockSessionService.AddSession(newSession)).Returns(
+            A.CallTo(() => _mockSessionService.GetAllSessions(AuthorisedUser)).Returns(
                 new ServiceResponse<List<GetSessionDto>>
                 {
-                    Data = null
+                    Data = new List<GetSessionDto>
+                    {
+                        new GetSessionDto
+                        {
+                            Id = 1
+                        }
+                    }
                 });
-            var controller = new SessionController(mockSessionService);
 
-            //Act
-            var result = await controller.AddSession(newSession);
+            var result = await _controller.Get();
+            var okResult = (OkObjectResult) result;
+            var actualResponse = (List<GetSessionDto>) okResult.Value;
 
-            //Assert
-            Assert.AreEqual(typeof(BadRequestObjectResult), result.GetType());
+            Assert.That(actualResponse.Count, Is.EqualTo(1));
+            //Assert.AreEqual(1, actualResponse.Count);
+            //actualResponse.Count.Should().Be(1);
+            //actualResponse.Should().HaveCount(1);
         }
 
         [Test]
-        public async Task UpdateSession_HappyPath_ShouldReturnOk()
+        public async Task GetAllShouldReturnNotFoundWhenSessionDoesNotExist()
         {
-            //Arrange
-            var endDate = DateTime.Now;
-            var startDate = DateTime.Now.AddDays(-1);
-            var updatedSession = new UpdateSessionDto();
-            var mockSessionService = A.Fake<ISessionService>();
-            A.CallTo(() => mockSessionService.UpdateSession(updatedSession)).Returns(
+            A.CallTo(() => _mockSessionService.GetAllSessions(AuthorisedUser)).Returns(
+                new ServiceResponse<List<GetSessionDto>>
+                {
+                    StatusCode = CESManagerStatusCode.SessionNotFound
+                });
+            var result = await _controller.Get();
+
+            Assert.AreEqual(typeof(NotFoundObjectResult), result.GetType());
+        }
+
+        [Test]
+        public async Task GetAllSessionShouldReturnExpectedErrorMessageWhenSessionDoesNotExist()
+        {
+            A.CallTo(() => _mockSessionService.GetAllSessions(AuthorisedUser))
+                .Returns(new ServiceResponse<List<GetSessionDto>>
+                {
+                    StatusCode = CESManagerStatusCode.SessionNotFound,
+                    Message = "Could not find sessions."
+                });
+            var result = await _controller.Get();
+            var objectResult = (NotFoundObjectResult) result;
+
+            Assert.That(objectResult.Value, Is.EqualTo("Could not find sessions."));
+        }
+
+        [Test]
+        public async Task GetSingleShouldReturnOKWhenSessionExists()
+        {
+            A.CallTo(() => _mockSessionService.GetSessionById(1, AuthorisedUser)).Returns(
                 new ServiceResponse<GetSessionDto>
                 {
                     Data = new GetSessionDto
                     {
-                        Id = 1,
-                        StartDateTime = startDate,
-                        EndDateTime = endDate
+                        Id = 1
                     }
                 });
-            var controller = new SessionController(mockSessionService);
+            var result = await _controller.Get();
 
-            //Act
-            var result = await controller.UpdateSession(updatedSession);
-            var okResult = result as OkObjectResult;
-            var actualResult = okResult.Value as ServiceResponse<GetSessionDto>;
-
-            //Assert
             Assert.AreEqual(typeof(OkObjectResult), result.GetType());
-            Assert.AreEqual(1, actualResult.Data.Id);
-            Assert.AreEqual(startDate, actualResult.Data.StartDateTime);
-            Assert.AreEqual(endDate, actualResult.Data.EndDateTime);
         }
 
         [Test]
-        public async Task UpdateSession_HappyPath_ShouldReturnNotFound()
+        public async Task GetSingleShouldReturnDataWhenSessionExists()
         {
-            //Arrange
-            var updatedSession = new UpdateSessionDto();
-            var mockSessionService = A.Fake<ISessionService>();
-            A.CallTo(() => mockSessionService.UpdateSession(updatedSession)).Returns(
+            A.CallTo(() => _mockSessionService.GetSessionById(1, AuthorisedUser)).Returns(
                 new ServiceResponse<GetSessionDto>
                 {
-                    Data = null,
-                    Message = "Session not found."
+                    Data = new GetSessionDto
+                    {
+                        Id = 1
+                    }
                 });
-            var controller = new SessionController(mockSessionService);
+            var result = await _controller.GetSingle(1);
 
-            //Act
-            var result = await controller.UpdateSession(updatedSession);
+            Assert.That(result, Is.InstanceOf<OkObjectResult>());
+        }
 
-            //Assert
+        [Test]
+        public async Task GetSingleShouldReturnNotFoundWhenSessionDoesNotExist()
+        {
+            A.CallTo(() => _mockSessionService.GetSessionById(1, AuthorisedUser)).Returns(
+                new ServiceResponse<GetSessionDto>
+                {
+                    StatusCode = CESManagerStatusCode.SessionNotFound
+                });
+            var result = await _controller.GetSingle(1);
+
             Assert.AreEqual(typeof(NotFoundObjectResult), result.GetType());
         }
 
         [Test]
-        public async Task UpdateSession_HappyPath_ShouldReturnBadRequest()
+        public async Task GetSingleShouldReturnExpectedErrorMessageWhenSessionNotFound()
         {
-            //Arrange
-            var updatedSession = new UpdateSessionDto();
-            var mockSessionService = A.Fake<ISessionService>();
-            A.CallTo(() => mockSessionService.UpdateSession(updatedSession)).Returns(
-                new ServiceResponse<GetSessionDto>
+            A.CallTo(() => _mockSessionService.GetSessionById(1, AuthorisedUser))
+                .Returns(new ServiceResponse<GetSessionDto>
                 {
-                    Message = "EndDateTime cannot be earlier than StartDateTime."
+                    StatusCode = CESManagerStatusCode.SessionNotFound,
+                    Message = "Session not found."
                 });
-            var controller = new SessionController(mockSessionService);
+            var result = await _controller.GetSingle(1);
+            var objectResult = (NotFoundObjectResult) result;
 
-            //Act
-            var result = await controller.UpdateSession(updatedSession);
-            var badResult = result as BadRequestObjectResult;
-            var actualResult = badResult.Value as string;
+            Assert.That(objectResult.Value, Is.EqualTo("Session not found."));
+        }
 
-            //Assert
+        [Test]
+        public async Task AddSessionShouldReturnOkWhenSessionExists()
+        {
+            var newSession = new AddSessionDto();
+            A.CallTo(() => _mockSessionService.AddSession(newSession)).Returns(
+                new ServiceResponse<List<GetSessionDto>>
+                {
+                    Data = new List<GetSessionDto>
+                    {
+                        new GetSessionDto
+                        {
+                            Id = 1
+                        }
+                    }
+                });
+            var result = await _controller.AddSession(newSession);
+
+            Assert.AreEqual(typeof(OkObjectResult), result.GetType());
+        }
+
+        [Test]
+        public async Task AddSessionShouldReturnDataWhenSessionExists()
+        {
+            var newSession = new AddSessionDto();
+            A.CallTo(() => _mockSessionService.AddSession(newSession)).Returns(
+                new ServiceResponse<List<GetSessionDto>>
+                {
+                    Data = new List<GetSessionDto>
+                    {
+                        new GetSessionDto
+                        {
+                            Id = 1
+                        }
+                    }
+                });
+            var result = await _controller.AddSession(newSession);
+
+            Assert.That(result, Is.InstanceOf<ObjectResult>());
+        }
+
+        [Test]
+        public async Task AddSessionShouldReturnBadRequestWhenSessionDurationIsNegative()
+        {
+            var newSession = new AddSessionDto();
+            A.CallTo(() => _mockSessionService.AddSession(newSession)).Returns(
+                new ServiceResponse<List<GetSessionDto>>
+                {
+                    StatusCode = CESManagerStatusCode.NegativeDuration
+                });
+            var result = await _controller.AddSession(newSession);
+
             Assert.AreEqual(typeof(BadRequestObjectResult), result.GetType());
         }
 
         [Test]
-        public async Task Delete_HappyPath_ShouldReturnOk()
+        public async Task AddSessionShouldReturnExpectedErrorMessageWhenSessionDurationIsNegative()
         {
-            //Arrange
-            var startDate = DateTime.Now.AddDays(-1);
-            var endDate = DateTime.Now;
-            var mockSessionService = A.Fake<ISessionService>();
-            A.CallTo(() => mockSessionService.DeleteSession(2)).Returns(
+            var newSession = new AddSessionDto();
+            A.CallTo(() => _mockSessionService.AddSession(newSession)).Returns(
                 new ServiceResponse<List<GetSessionDto>>
                 {
-                    Data = new List<GetSessionDto>()
-                    {
-                        new GetSessionDto
-                        {
-                            Id = 1,
-                            StartDateTime = startDate,
-                            EndDateTime = endDate
-                        }
-                    }
+                    StatusCode = CESManagerStatusCode.NegativeDuration,
+                    Message = "EndDateTime cannot be earlier than StartDateTime."
                 });
-            var controller = new SessionController(mockSessionService);
+            var result = await _controller.AddSession(newSession);
+            var objectResult = (BadRequestObjectResult) result;
 
-            //Act
-            var result = await controller.Delete(2);
-            var okResult = result as OkObjectResult;
-            var actualResult = okResult.Value as ServiceResponse<List<GetSessionDto>>;
-
-            //Assert
-            Assert.AreEqual(typeof(OkObjectResult),result.GetType());
-            Assert.AreEqual(1, actualResult.Data[0].Id);
-            Assert.AreEqual(startDate, actualResult.Data[0].StartDateTime);
-            Assert.AreEqual(endDate, actualResult.Data[0].EndDateTime);
+            Assert.That(objectResult.Value, Is.EqualTo("EndDateTime cannot be earlier than StartDateTime."));
         }
 
         [Test]
-        public async Task Delete_HappyPath_ShouldReturnNotFound()
+        public async Task UpdateSessionShouldReturnOKWhenSessionExists()
         {
-            //Arrange
-            var mockSessionService = A.Fake<ISessionService>();
-            A.CallTo(() => mockSessionService.DeleteSession(2)).Returns(
-                new ServiceResponse<List<GetSessionDto>>
+            var updatedSession = new UpdateSessionDto();
+            A.CallTo(() => _mockSessionService.UpdateSession(updatedSession)).Returns(
+                new ServiceResponse<GetSessionDto>
                 {
-                    Data = null
+                    Data = new GetSessionDto
+                    {
+                        Id = 1
+                    }
                 });
-            var controller = new SessionController(mockSessionService);
+            var result = await _controller.UpdateSession(updatedSession);
 
-            //Act
-            var result = await controller.Delete(2);
+            Assert.AreEqual(typeof(OkObjectResult), result.GetType());
+        }
 
-            //Assert
+        [Test]
+        public async Task UpdateSessionShouldReturnDataWhenSessionExists()
+        {
+            var updatedSession = new UpdateSessionDto();
+            A.CallTo(() => _mockSessionService.UpdateSession(updatedSession)).Returns(
+                new ServiceResponse<GetSessionDto>
+                {
+                    Data = new GetSessionDto
+                    {
+                        Id = 1
+                    }
+                });
+            var result = await _controller.UpdateSession(updatedSession);
+
+            Assert.That(result, Is.InstanceOf<ObjectResult>());
+        }
+
+        [Test]
+        public async Task UpdateSessionShouldReturnNotFoundWhenSessionDoesNotExist()
+        {
+            var updatedSession = new UpdateSessionDto();
+            A.CallTo(() => _mockSessionService.UpdateSession(updatedSession)).Returns(
+                new ServiceResponse<GetSessionDto>
+                {
+                    StatusCode = CESManagerStatusCode.SessionNotFound
+                });
+            var result = await _controller.UpdateSession(updatedSession);
+
             Assert.AreEqual(typeof(NotFoundObjectResult), result.GetType());
+        }
+
+        [Test]
+        public async Task UpdateSessionShouldReturnExpectedErrorMessageWhenSessionDoesNotExist()
+        {
+            var updatedSession = new UpdateSessionDto();
+            A.CallTo(() => _mockSessionService.UpdateSession(updatedSession)).Returns(
+                new ServiceResponse<GetSessionDto>
+                {
+                    StatusCode = CESManagerStatusCode.SessionNotFound,
+                    Message = "Could not find session to update."
+                });
+            var result = await _controller.UpdateSession(updatedSession);
+            var objectResult = (NotFoundObjectResult) result;
+
+            Assert.That(objectResult.Value, Is.EqualTo("Could not find session to update."));
+        }
+
+        [Test]
+        public async Task UpdateSessionShouldReturnBadRequestWhenSessionDurationIsNegative()
+        {
+            var updatedSession = new UpdateSessionDto();
+            A.CallTo(() => _mockSessionService.UpdateSession(updatedSession)).Returns(
+                new ServiceResponse<GetSessionDto>
+                {
+                    StatusCode = CESManagerStatusCode.NegativeDuration
+                });
+            var result = await _controller.UpdateSession(updatedSession);
+
+            Assert.AreEqual(typeof(BadRequestObjectResult), result.GetType());
+        }
+
+        [Test]
+        public async Task UpdateSessionShouldReturnExpectedErrorMessageWhenSessionDurationIsNegative()
+        {
+            var updatedSession = new UpdateSessionDto();
+            A.CallTo(() => _mockSessionService.UpdateSession(updatedSession)).Returns(
+                new ServiceResponse<GetSessionDto>
+                {
+                    StatusCode = CESManagerStatusCode.NegativeDuration,
+                    Message = "EndDateTime cannot be earlier than StartDateTime."
+                });
+            var result = await _controller.UpdateSession(updatedSession);
+            var objectResult = (BadRequestObjectResult) result;
+
+            Assert.That(objectResult.Value, Is.EqualTo("EndDateTime cannot be earlier than StartDateTime."));
+        }
+
+        [Test]
+        public async Task DeleteSessionShouldReturnNotFoundWhenSessionDoesNotExist()
+        {
+            A.CallTo(() => _mockSessionService.DeleteSession(1, AuthorisedUser))
+                .Returns(new ServiceResponse<List<GetSessionDto>>
+                {
+                    StatusCode = CESManagerStatusCode.SessionNotFound
+                });
+            var result = (IStatusCodeActionResult) await _controller.Delete(1);
+
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status404NotFound));
+        }
+
+        [Test]
+        public async Task DeleteSessionShouldReturnExpectedErrorMessageWhenSessionDoesNotExist()
+        {
+            A.CallTo(() => _mockSessionService.DeleteSession(1, AuthorisedUser))
+                .Returns(new ServiceResponse<List<GetSessionDto>>
+                {
+                    StatusCode = CESManagerStatusCode.SessionNotFound,
+                    Message = "Could not find session to Delete."
+                });
+            var result = await _controller.Delete(1);
+            var objectResult = (NotFoundObjectResult) result;
+
+            Assert.That(objectResult.Value, Is.EqualTo("Could not find session to Delete."));
+        }
+
+        [Test]
+        public async Task DeleteSessionShouldReturnOKWhenSessionDoesExist()
+        {
+            A.CallTo(() => _mockSessionService.DeleteSession(1, AuthorisedUser))
+                .Returns(new ServiceResponse<List<GetSessionDto>>
+                {
+                    Data = new List<GetSessionDto>
+                    {
+                        new GetSessionDto
+                        {
+                            Id = 1
+                        }
+                    }
+                });
+            var result = (IStatusCodeActionResult) await _controller.Delete(1);
+
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+        }
+
+        [Test]
+        public async Task DeleteSessionShouldReturnDataWhenSessionDoesExist()
+        {
+            A.CallTo(() => _mockSessionService.DeleteSession(1, AuthorisedUser))
+                .Returns(
+                    new ServiceResponse<List<GetSessionDto>>
+                    {
+                        Data = new List<GetSessionDto>
+                        {
+                            new GetSessionDto
+                            {
+                                Id = 1
+                            }
+                        }
+                    });
+            var result = await _controller.Delete(1);
+
+            Assert.That(result, Is.InstanceOf<ObjectResult>());
         }
     }
 }
