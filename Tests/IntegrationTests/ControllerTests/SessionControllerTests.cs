@@ -26,10 +26,10 @@ namespace Tests.IntegrationTests.ControllerTests
         private string _bearerToken;
         private DataContext _dataContext;
         private List<GetSessionDto> _sessions;
-        private string _urlGetAll = "https://localhost:44363/session/getall";
-        private string _urlLogin = "https://localhost:44363/auth/login";
-        private string _urlRegister = "https://localhost:44363/auth/register";
-        private string _urlSession = "https://localhost:44363/session/";
+        private string _urlGetAll = "https://cesmanager-api.azurewebsites.net/session/getall";
+        private string _urlLogin = "https://cesmanager-api.azurewebsites.net/auth/login";
+        private string _urlRegister = "https://cesmanager-api.azurewebsites.net/auth/register";
+        private string _urlSession = "https://cesmanager-api.azurewebsites.net/session/";
         private HttpClient _httpClient;
 
 
