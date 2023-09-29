@@ -30,13 +30,11 @@ namespace Tests.IntegrationTests.ControllerTests
         private string _urlRegister = "https://localhost:44363/auth/register";
         private string _urlSession = "https://localhost:44363/session/";
         private HttpClient _httpClient;
-        public IConfiguration Configuration { get; set; }
 
-      
+
         [SetUp]
-        public async Task Setup(IConfiguration configuration)
+        public async Task Setup()
         {
-            Configuration = configuration;
             _dataContext = CreateContext();
 
             Utility.CreatePasswordHash("123456", out byte[] passwordHash, out byte[] passwordSalt);
@@ -68,8 +66,12 @@ namespace Tests.IntegrationTests.ControllerTests
 
         public DataContext CreateContext()
         {
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .Build();
+
             var builder = new DbContextOptionsBuilder<DataContext>()
-                .UseSqlServer(Configuration.GetConnectionString("AzureConnection"));
+                .UseSqlServer(configuration.GetConnectionString("AzureConnection"));
             return new DataContext(builder.Options);
         }
 
