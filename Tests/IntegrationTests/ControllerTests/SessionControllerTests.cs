@@ -30,17 +30,13 @@ namespace Tests.IntegrationTests.ControllerTests
         private string _urlRegister = "https://localhost:44363/auth/register";
         private string _urlSession = "https://localhost:44363/session/";
         private HttpClient _httpClient;
+        public IConfiguration Configuration { get; set; }
 
-        public IConfiguration Configuration { get; }
-
-        public SessionControllerTests(IConfiguration configuration)
+      
+        [SetUp]
+        public async Task Setup(IConfiguration configuration)
         {
             Configuration = configuration;
-        }
-
-        [SetUp]
-        public async Task Setup()
-        {
             _dataContext = CreateContext();
 
             Utility.CreatePasswordHash("123456", out byte[] passwordHash, out byte[] passwordSalt);
