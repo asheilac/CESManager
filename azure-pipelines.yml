@@ -25,6 +25,11 @@ steps:
     command: 'test'
     projects: '**/Tests.csproj'
     arguments: '--filter TestCategory=UnitTests'
+- task: CopyFiles@2
+  inputs:
+    #SourceFolder: # string. Source Folder. 
+    Contents: '**' # string. Required. Contents. Default: **.
+    TargetFolder: $(Build.ArtifactStagingDirectory)
 - task: DotNetCoreCLI@2
   inputs:
     command: publish
