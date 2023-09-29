@@ -11,6 +11,7 @@ using CESManager.Dtos.Session;
 using CESManager.Models;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
@@ -29,6 +30,13 @@ namespace Tests.IntegrationTests.ControllerTests
         private string _urlRegister = "https://localhost:44363/auth/register";
         private string _urlSession = "https://localhost:44363/session/";
         private HttpClient _httpClient;
+
+        public IConfiguration Configuration { get; }
+
+        public SessionControllerTests(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
 
         [SetUp]
         public async Task Setup()
@@ -65,7 +73,7 @@ namespace Tests.IntegrationTests.ControllerTests
         public DataContext CreateContext()
         {
             var builder = new DbContextOptionsBuilder<DataContext>()
-                .UseSqlServer("Server=HXDTENGMS311\\SQLEXPRESS; Database=CESManagerTest; Trusted_Connection=true;");
+                .UseSqlServer(Configuration.GetConnectionString("AzureConnection"));
             return new DataContext(builder.Options);
         }
 
